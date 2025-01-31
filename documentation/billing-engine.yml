@@ -1,0 +1,147 @@
+openapi: 3.0.0
+info:
+  title: Billing Engine API
+  description: API for managing loan repayment schedules, outstanding balances, and delinquency status.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+paths:
+  /loans:
+    post:
+      summary: Create a new loan
+      description: Create a new loan and generate a repayment schedule.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanRequest"
+      responses:
+        "201":
+          description: Loan created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Loan"
+
+  /loans/{loanId}:
+    get:
+      summary: Get a specific loan
+      description: Retrieve details of a loan by loan ID.
+      parameters:
+        - name: loanId
+          in: path
+          required: true
+          description: Unique loan identifier
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Loan details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Loan"
+
+  /loans/{loanId}/repayment:
+    post:
+      summary: Make a payment
+      description: Record a payment for a loan.
+      parameters:
+        - name: loanId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentRequest"
+      responses:
+        "201":
+          description: Payment recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /loans/delinquent:
+    get:
+      summary: Get delinquent loans
+      description: Retrieve all loans that have missed 2 or more payments.
+      responses:
+        "200":
+          description: List of delinquent loans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Loan"
+
+components:
+  schemas:
+    LoanRequest:
+      type: object
+      required:
+        - user_id
+        - amount
+        - number_of_installments
+        - interest_rate
+      properties:
+        user_id:
+          type: string
+        amount:
+          type: number
+        number_of_installments:
+          type: integer
+        interest_rate:
+          type: integer
+    Loan:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        principal:
+          type: number
+        total_amount:
+          type: number
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - ACTIVE
+            - COMPLETED
+
+    PaymentRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+    Transaction:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+        loan_id:
+          type: string
+        transaction_date:
+          type: string
+          format: date
+        amount_paid:
+          type: number
+        status:
+          type: string
+
